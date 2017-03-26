@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import pykka
+import uritools
 from mopidy import backend, models
 
 from .client import IVooxAPI
@@ -106,14 +107,12 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         pass
 
     def _translate_podcast_uri(self, xml, ep_guid=None):
-        podcast_uri = 'podcast+{xml}'
-        if ep_guid:
-            podcast_uri += '#{baseurl}{ep_guid}'
-
-        return podcast_uri.format(
-            baseurl=self.ivoox.api_url,
-            xml=xml,
-            ep_guid=ep_guid)
+        if not xml:
+            return None
+        baseurl = self.ivoox.baseurl
+        program = uritools.urijoin(baseurl, xml)
+        episode = '#' + uritools.urijoin(baseurl, ep_guid) if ep_guid else ''
+        return 'podcast+{}{}'.format(program, episode)
 
     def _translate_episodes(self, results):
         return [models.Ref.track(

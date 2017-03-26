@@ -5,6 +5,7 @@ from __future__ import unicode_literals, print_function
 import logging
 import requests
 import datetime as dt
+import uritools
 
 from scrapper import Scrapper
 
@@ -49,7 +50,7 @@ class IVooxAPI(object):
         self._cache = {}
 
     @property
-    def api_url(self):
+    def baseurl(self):
         return self.API_BASE
 
     def set_language(self, lang='ES'):
@@ -60,35 +61,28 @@ class IVooxAPI(object):
         if not (user and password):
             return False
 
+        login_url = self._absolute_url(API_URLS['LOGIN'])baseurl
         self.session = requests.session()
 
         try:
-            self.session.get(self.API_BASE + API_URLS['LOGIN'])
-            self.session.post(
-                self.API_BASE + API_URLS['LOGIN'],
-                data={
-                    'at-user': user,
-                    'at-pw': password,
-                    'redir': self.API_BASE
-                }
-            )
+            self.session.get(login_url)
+            self.session.post(login_url,
+                              data={'at-user': user,
+                                    'at-pw': password,
+                                    'redir': self.baseurl})
+baseurl
             # TODO: Check login is OK
             return True
 
         except Exception as ex:
-            logger.error('Login error on %s: %s', self.API_BASE, ex)
+            logger.error('Login error on %s: %s', self.baseurl, ex)
             return False
 
-    def scrap_url(self, url, type=None, scrapper=None):
-        if not url.startswith('http://'):
-            url = self.API_BASE + url
-
+    def scrap_url(self, url, type=None, scrapper=None):baseurl
         if not scrapper:
             scrapper = self._get_scrapper(type=type, session=self.session)
-
         logger.debug('Using %s to analize %s', scrapper.__class__.__name__, url)
-        results = scrapper.scrap(url)
-
+        results = scrapper.scrap(self._absolute_url(url))
         return results
 
     @_cache_results
@@ -145,6 +139,9 @@ class IVooxAPI(object):
             raise KeyError('No scrapper for type %s', type)
 
         return scrapper
+baseurl
+    def _absolute_url(self, relurl):
+        return uritools.urijoin(self.baseurl, relurl)
 
 
 class IVooxParser(object):
@@ -161,17 +158,10 @@ class IVooxParser(object):
     def guess_program_xml(url):
         if url.endswith('.xml'):
             return url
-
-        if not url.endswith('.html'):
-            # Code is first parameter
-            code = url
-            name = 'podcast'
-        else:
-            code = IVooxParser.extract_code(url)
-            name = 'podcast'
-
+baseurl
+        code = IVooxParser.extract_code(url) if url.endswith('.html') else url
         # arreglar después para multiidioma
-        return 'http://www.ivoox.com/' + API_URLS['XML_PROGRAM'].format(code, name)
+        return 'http://www.ivoox.com/' + API_URLS['XML_PROGRAM'].format(code, 'podcast')
 
     @staticmethod
     def extract_duration(strtime):
