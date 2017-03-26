@@ -24,7 +24,8 @@ API_URLS = {
     'URL_PROGRAM': 'podcast_sq_{}_1.html',
     'URL_CHANNEL': 'escuchar_nq_{}_1.html',
     'XML_PROGRAM': '{1}_fg_{0}_filtro_1.xml',
-    'LIST_PENDING': 'mis-audios_hn_{}.html'
+    'LIST_HOME': '',
+    'LIST_PENDING': 'mis-audios_hn_{}.html',
     'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html'
 }
 
@@ -108,7 +109,13 @@ class IVooxAPI(object):
 
     @_cache_results
     def get_home(self):
-        return self.scrap_url(url='', type='episodes')
+        return self.get_episode_list('home')
+
+    def get_episode_list(self, listname, page=1):
+        list_url = API_URLS['LIST_{}'.format(listname).upper()]
+        return self.scrap_url(
+            url=list_url.format(page),
+            type='episodes')
 
     def explore(self, category=None, type='episodes', page=1):
         explore_url = API_URLS['EXPLORE_{}'.format(type).upper()]

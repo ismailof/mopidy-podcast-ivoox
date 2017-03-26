@@ -11,12 +11,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 URI_SCHEME = 'podcast+ivoox'
-URI_EXPLORE = {'uri': URI_SCHEME + ':explore',
-               'ES': 'Explorar',
-               'EN': 'Explore'}
-URI_HOME = {'uri': URI_SCHEME + ':home',
-            'ES': 'Recomendado',
-            'EN': 'Recommended'}
+URI_EXPLORE = {'uri': URI_SCHEME + ':explore', 'ES': 'Explorar', 'EN': 'Explore'}
+URI_HOME = {'uri': URI_SCHEME + ':home', 'ES': 'Recomendado', 'EN': 'Recommended'}
+URI_LISTS = {'uri': URI_SCHEME + ':list', 'ES': 'Listas', 'EN': 'Lists'}
+URI_FAVORITES = {'uri': URI_LISTS['uri'] + ':favorites', 'ES': 'Favoritos', 'EN': 'Starred'}
+URI_PENDING = {'uri': URI_LISTS['uri'] + ':pending', 'ES': 'Escuchar mas tarde', 'EN': 'Listen later'}
 
 
 class IVooxBackend(pykka.ThreadingActor, backend.Backend):
@@ -67,7 +66,10 @@ class IVooxLibraryProvider(backend.LibraryProvider):
                 menu = [models.Ref.directory(
                             name=item[self.lang],
                             uri=item['uri'])
-                        for item in (URI_EXPLORE, URI_HOME)]
+                        for item in (URI_EXPLORE,
+                                     URI_HOME,
+                                     URI_FAVORITES,
+                                     URI_PENDING)]
                 subs = self._translate_programs(self.ivoox.get_subscriptions(),
                                                 info_field='new_audios')
                 return menu + subs
@@ -80,9 +82,15 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         if uri == URI_HOME['uri']:
             episodes = self.ivoox.get_home()
 
+        elif uri.startswith(URI_LISTS['uri']):
+            _, _, listname = uri.split(':')
+            episodes = self.ivoox.get_episode_list(listname)
+
         elif uri.startswith(URI_EXPLORE['uri']):
-            uri_parts = uri.split(':')
-            genre = uri_parts[2] if len(uri_parts) > 2 else None
+            try:
+                _, _, genre = uri.split(':')
+            except ValueError:
+                genre = None
 
             subgenres = self.ivoox.get_categories(parent=genre) \
                 if not genre or not genre.startswith('f4') else None
