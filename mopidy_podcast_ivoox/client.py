@@ -23,7 +23,8 @@ API_URLS = {
     'URL_EPISODE': '{1}-audios-mp3_rf_{0}_1.html',
     'URL_PROGRAM': 'podcast_sq_{}_1.html',
     'URL_CHANNEL': 'escuchar_nq_{}_1.html',
-    'XML_PROGRAM': '{1}_fg_{0}_filtro_1.xml',
+#    'XML_PROGRAM': '{1}_fg_{0}_filtro_1.xml',  # To allow pagination
+    'XML_PROGRAM': '{1}_fg_{0}.xml',
     'LIST_HOME': '',
     'LIST_PENDING': 'mis-audios_hn_{}.html',
     'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html'
