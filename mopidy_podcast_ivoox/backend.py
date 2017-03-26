@@ -13,9 +13,9 @@ logger.setLevel(logging.DEBUG)
 URI_SCHEME = 'podcast+ivoox'
 URI_EXPLORE = {'uri': URI_SCHEME + ':explore', 'ES': 'Explorar', 'EN': 'Explore'}
 URI_HOME = {'uri': URI_SCHEME + ':home', 'ES': 'Recomendado', 'EN': 'Recommended'}
-URI_LISTS = {'uri': URI_SCHEME + ':list', 'ES': 'Listas', 'EN': 'Lists'}
-URI_FAVORITES = {'uri': URI_LISTS['uri'] + ':favorites', 'ES': 'Favoritos', 'EN': 'Starred'}
-URI_PENDING = {'uri': URI_LISTS['uri'] + ':pending', 'ES': 'Escuchar mas tarde', 'EN': 'Listen later'}
+URI_LIST = {'uri': URI_SCHEME + ':list', 'ES': 'Listas', 'EN': 'Lists'}
+URI_FAVORITES = {'uri': URI_LIST['uri'] + ':favorites', 'ES': 'Favoritos', 'EN': 'Starred'}
+URI_PENDING = {'uri': URI_LIST['uri'] + ':pending', 'ES': 'Escuchar mas tarde', 'EN': 'Listen later'}
 
 
 class IVooxBackend(pykka.ThreadingActor, backend.Backend):
@@ -62,7 +62,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         if uri == self.root_directory.uri:
             if self.user_logged:
                 # User is logged. Show custom menus and subscriptions
-                menu = self._translate_menu(URI_EXPLORE, URI_HOME, URI_LISTS)
+                menu = self._translate_menu(URI_EXPLORE, URI_HOME, URI_LIST)
                 subs = self._translate_programs(self.ivoox.get_subscriptions(),
                                                 info_field='new_audios')
                 return menu + subs
@@ -75,13 +75,14 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         if uri == URI_HOME['uri']:
             episodes = self.ivoox.get_home()
 
-        elif uri.startswith(URI_LISTS['uri']):
+        elif uri.startswith(URI_LIST['uri']):
             try:
                 _, _, code = uri.split(':', 3)
             except ValueError:
                 # Lists menu
                 menu = self._translate_menu(URI_FAVORITES, URI_PENDING)
-                lists = self._translate_menu({'uri': URI_LISTS['uri'] + ':202814', 'ES': 'Nueva cosa'})
+                lists = self._translate_lists([{'code': '202814',
+                                              'name': 'Nueva cosa'}])
                 return menu + lists
 
             episodes = self.ivoox.get_episode_list(code)
@@ -145,4 +146,10 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         return [models.Ref.directory(
                     name=item['name'],
                     uri=URI_EXPLORE['uri'] + ':' + item['code']
+                ) for item in results]
+
+    def _translate_lists(self, results):
+        return [models.Ref.playlist(
+                    name=item['name'],
+                    uri=URI_LIST['uri'] + ':' + item['code']
                 ) for item in results]
