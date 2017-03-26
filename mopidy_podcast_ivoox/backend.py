@@ -105,24 +105,31 @@ class IVooxLibraryProvider(backend.LibraryProvider):
     def search(self, query=None, uris=None, exact=False):
         pass
 
-    @staticmethod
-    def _translate_episodes(results):
+    def _translate_podcast_uri(self, xml, ep_guid=None):
+        podcast_uri = 'podcast+{xml}'
+        if ep_guid:
+            podcast_uri += '#{baseurl}{ep_guid}'
+
+        return podcast_uri.format(
+            baseurl=self.ivoox.api_url,
+            xml=xml,
+            ep_guid=ep_guid)
+
+    def _translate_episodes(self, results):
         return [models.Ref.track(
                     name=item['name'],
-                    uri=item['uri'])
-                for item in results]
+                    uri=self._translate_podcast_uri(item['xml'], item['guid'])
+                ) for item in results]
 
-    @staticmethod
-    def _translate_programs(results, info_field=None):
+    def _translate_programs(self, results, info_field=None):
         return [models.Ref.album(
                     name=item['name'] + (' ({})'.format(item[info_field])
                         if info_field and item.get(info_field) else ''),
-                    uri=item['uri'])
-                for item in results]
+                    uri=self._translate_podcast_uri(item['xml'])
+                ) for item in results]
 
-    @staticmethod
-    def _translate_categories(results):
+    def _translate_categories(self, results):
         return [models.Ref.directory(
                     name=item['name'],
-                    uri=URI_EXPLORE['uri'] + ':' + item['code'])
-                for item in results]
+                    uri=URI_EXPLORE['uri'] + ':' + item['code']
+                ) for item in results]

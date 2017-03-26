@@ -26,8 +26,8 @@ API_URLS = {
 }
 
 
-def _cache_results(method):    
-    def cached_method(self, *args, **kwargs):        
+def _cache_results(method):
+    def cached_method(self, *args, **kwargs):
         if len(args) != 0 or any(parms!=None for parms in kwargs.itervalues()):
             return method(self, *args, **kwargs)
         if not method in self._cache:
@@ -46,7 +46,11 @@ class IVooxAPI(object):
     def __init__(self):
         super(IVooxAPI, self).__init__()
         self.session = None
-        self._cache = {}        
+        self._cache = {}
+
+    @property
+    def api_url(self):
+        return self.API_BASE
 
     def set_language(self, lang='ES'):
         if lang != 'ES':
@@ -141,8 +145,8 @@ class IVooxAPI(object):
             raise KeyError('No scrapper for type %s', type)
 
         return scrapper
-        
-    
+
+
 class IVooxParser(object):
 
     @staticmethod
@@ -170,22 +174,8 @@ class IVooxParser(object):
         return 'http://www.ivoox.com/' + API_URLS['XML_PROGRAM'].format(code, name)
 
     @staticmethod
-    def compose_podcast_uri(program_info, ep_guid=None):
-
-        podcast_uri = 'podcast+{program_xml}'
-        if ep_guid:
-            podcast_uri += '#{baseurl}{ep_guid}'
-
-        return podcast_uri.format(
-            #baseurl=API_BASE,
-            baseurl='http://www.ivoox.com/', # arreglar después para multiidioma
-            program_xml=IVooxParser.guess_program_xml(program_info),
-            ep_guid=ep_guid
-        )
-
-    @staticmethod
     def extract_duration(strtime):
-        return sum(int(x) * 60 ** i 
+        return sum(int(x) * 60 ** i
                    for i, x in enumerate(reversed(strtime.split(":"))))
 
     @staticmethod
@@ -260,10 +250,8 @@ class IVooxEpisodes(Scrapper):
         self.add_field('description', './/meta[@itemprop="description"]/@content')
         self.add_field('program', './/div[@class="wrapper"]/a/@title')
         self.add_field('program_url', './/div[@class="wrapper"]/a/@href')
-        # self.add_field('program_xml', basefield = 'program_url',
-        #                parser=IVooxParser.guess_program_xml),
-        self.add_field('uri', basefield=['program_url', 'guid'],
-                       parser=IVooxParser.compose_podcast_uri)
+        self.add_field('xml', basefield = 'program_url',
+                        parser=IVooxParser.guess_program_xml),
 
 
 class IVooxPrograms(Scrapper):
@@ -275,10 +263,7 @@ class IVooxPrograms(Scrapper):
         self.add_field('audios', './/li[@class="microphone"]/a/text()',
                        parser=int, default=0)
         self.add_field('image', './/img[@class="main"]/@src')
-        #self.add_field('code', basefield='url', parser=IVooxParser.extract_code)
-        #self.add_field('xml', basefield='url', parser=IVooxParser.guess_program_xml)
-        self.add_field('uri', basefield='url',
-                       parser=IVooxParser.compose_podcast_uri)
+        self.add_field('xml', basefield='url', parser=IVooxParser.guess_program_xml)
 
 
 class IVooxShare(Scrapper):
@@ -308,9 +293,6 @@ class IVooxSubscriptions(Scrapper):
                        parser=int, default=0)
         self.add_field('xml', './/a[@class="share"]/@href',
                        parser=self.share.scrap)
-
-        self.add_field('uri', basefield='xml',
-                       parser=IVooxParser.compose_podcast_uri)
 
 
 class IVooxCategories(Scrapper):
