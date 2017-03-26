@@ -55,7 +55,7 @@ class Scrapper(object):
     def populate_itemlist(self):
         nitems = max(len(field.value_list)
                      for field in self.fieldlist.itervalues())
-        self.itemlist = [{name: field.default 
+        self.itemlist = [{name: field.default
                           for name, field in self.fieldlist.iteritems()}
                          for i in xrange(nitems)]
         for name, field in self.fieldlist.iteritems():

@@ -16,6 +16,7 @@ API_URLS = {
     'LOGIN': 'ajx-login_zl.html',
     'EXPLORE_EPISODES': 'audios_sa_{}_{}.html',
     'EXPLORE_PROGRAMS': 'podcasts_sc_{}_{}.html',
+    'EXPLORE_LISTS': 'list_bk_list_{}_{}.html',
     'SUBSCRIPTIONS': 'gestionar-suscripciones_je_1.html?order=date',
     'SEARCH_EPISODES': '{}_sb_{}.html',
     'SEARCH_PROGRAMS': '{}_sw_1_{}.html',
@@ -25,7 +26,6 @@ API_URLS = {
     'URL_CHANNEL': 'escuchar_nq_{}_1.html',
 #    'XML_PROGRAM': '{1}_fg_{0}_filtro_1.xml',  # To allow pagination
     'XML_PROGRAM': '{1}_fg_{0}.xml',
-    'LIST_HOME': '',
     'LIST_PENDING': 'mis-audios_hn_{}.html',
     'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html'
 }
@@ -110,12 +110,16 @@ class IVooxAPI(object):
 
     @_cache_results
     def get_home(self):
-        return self.get_episode_list('home')
+        return self.scrap_url(url='', type='episodes')
 
-    def get_episode_list(self, listname, page=1):
-        list_url = API_URLS['LIST_{}'.format(listname).upper()]
+    def get_episode_list(self, code, page=1):
+        if code in ['pending', 'favorites']:
+            list_url = API_URLS['LIST_{}'.format(code).upper()].format(page)
+        else:
+            list_url = API_URLS['EXPLORE_LISTS'].format(code, page)
+
         return self.scrap_url(
-            url=list_url.format(page),
+            url=list_url,
             type='episodes')
 
     def explore(self, category=None, type='episodes', page=1):
@@ -309,3 +313,4 @@ class IVooxCategories(Scrapper):
         self.add_field('url', './/{}//li/a/@href'.format(container))
         self.add_field('code', basefield='url',
                        parser=IVooxParser.extract_code)
+

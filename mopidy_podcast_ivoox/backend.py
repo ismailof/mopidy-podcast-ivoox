@@ -24,7 +24,6 @@ class IVooxBackend(pykka.ThreadingActor, backend.Backend):
 
     def __init__(self, config, audio):
         super(IVooxBackend, self).__init__()
-
         self.library = IVooxLibraryProvider(config, self)
 
 
@@ -63,13 +62,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         if uri == self.root_directory.uri:
             if self.user_logged:
                 # User is logged. Show custom menus and subscriptions
-                menu = [models.Ref.directory(
-                            name=item[self.lang],
-                            uri=item['uri'])
-                        for item in (URI_EXPLORE,
-                                     URI_HOME,
-                                     URI_FAVORITES,
-                                     URI_PENDING)]
+                menu = self._translate_menu(URI_EXPLORE, URI_HOME, URI_LISTS)
                 subs = self._translate_programs(self.ivoox.get_subscriptions(),
                                                 info_field='new_audios')
                 return menu + subs
@@ -83,12 +76,19 @@ class IVooxLibraryProvider(backend.LibraryProvider):
             episodes = self.ivoox.get_home()
 
         elif uri.startswith(URI_LISTS['uri']):
-            _, _, listname = uri.split(':')
-            episodes = self.ivoox.get_episode_list(listname)
+            try:
+                _, _, code = uri.split(':', 3)
+            except ValueError:
+                # Lists menu
+                menu = self._translate_menu(URI_FAVORITES, URI_PENDING)
+                lists = self._translate_menu({'uri': URI_LISTS['uri'] + ':202814', 'ES': 'Nueva cosa'})
+                return menu + lists
+
+            episodes = self.ivoox.get_episode_list(code)
 
         elif uri.startswith(URI_EXPLORE['uri']):
             try:
-                _, _, genre = uri.split(':')
+                _, _, genre = uri.split(':', 3)
             except ValueError:
                 genre = None
 
@@ -114,7 +114,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
     def search(self, query=None, uris=None, exact=False):
         pass
 
-    def _translate_podcast_uri(self, xml, ep_guid=None):
+    def _make_podcast_uri(self, xml, ep_guid=None):
         if not xml:
             return None
         baseurl = self.ivoox.baseurl
@@ -122,17 +122,23 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         episode = '#' + uritools.urijoin(baseurl, ep_guid) if ep_guid else ''
         return 'podcast+{}{}'.format(program, episode)
 
+    def _translate_menu(self, *menuitems):
+        return [models.Ref.directory(
+                    name=item[self.lang],
+                    uri=item['uri'])
+                for item in menuitems]
+
     def _translate_episodes(self, results):
         return [models.Ref.track(
                     name=item['name'],
-                    uri=self._translate_podcast_uri(item['xml'], item['guid'])
+                    uri=self._make_podcast_uri(item['xml'], item['guid'])
                 ) for item in results]
 
     def _translate_programs(self, results, info_field=None):
         return [models.Ref.album(
                     name=item['name'] + (' ({})'.format(item[info_field])
                         if info_field and item.get(info_field) else ''),
-                    uri=self._translate_podcast_uri(item['xml'])
+                    uri=self._make_podcast_uri(item['xml'])
                 ) for item in results]
 
     def _translate_categories(self, results):
