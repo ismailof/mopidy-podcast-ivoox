@@ -24,6 +24,8 @@ API_URLS = {
     'URL_PROGRAM': 'podcast_sq_{}_1.html',
     'URL_CHANNEL': 'escuchar_nq_{}_1.html',
     'XML_PROGRAM': '{1}_fg_{0}_filtro_1.xml',
+    'LIST_PENDING': 'mis-audios_hn_{}.html'
+    'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html'
 }
 
 
@@ -61,7 +63,7 @@ class IVooxAPI(object):
         if not (user and password):
             return False
 
-        login_url = self._absolute_url(API_URLS['LOGIN'])baseurl
+        login_url = self._absolute_url(API_URLS['LOGIN'])
         self.session = requests.session()
 
         try:
@@ -70,7 +72,7 @@ class IVooxAPI(object):
                               data={'at-user': user,
                                     'at-pw': password,
                                     'redir': self.baseurl})
-baseurl
+
             # TODO: Check login is OK
             return True
 
@@ -78,7 +80,7 @@ baseurl
             logger.error('Login error on %s: %s', self.baseurl, ex)
             return False
 
-    def scrap_url(self, url, type=None, scrapper=None):baseurl
+    def scrap_url(self, url, type=None, scrapper=None):
         if not scrapper:
             scrapper = self._get_scrapper(type=type, session=self.session)
         logger.debug('Using %s to analize %s', scrapper.__class__.__name__, url)
@@ -139,7 +141,7 @@ baseurl
             raise KeyError('No scrapper for type %s', type)
 
         return scrapper
-baseurl
+
     def _absolute_url(self, relurl):
         return uritools.urijoin(self.baseurl, relurl)
 
@@ -158,7 +160,7 @@ class IVooxParser(object):
     def guess_program_xml(url):
         if url.endswith('.xml'):
             return url
-baseurl
+
         code = IVooxParser.extract_code(url) if url.endswith('.html') else url
         # arreglar después para multiidioma
         return 'http://www.ivoox.com/' + API_URLS['XML_PROGRAM'].format(code, 'podcast')
