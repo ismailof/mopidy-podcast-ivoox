@@ -9,7 +9,9 @@ __version__ = '0.1.0'
 
 logger = logging.getLogger(__name__)
 
-COUNTRIES = ['ES', 'DE', 'AR', 'BR', 'CL', 'CO', 'US', 'FR', 'IT', 'MX', 'UK', 'PE', 'PT']
+COUNTRIES = ['ES', 'DE', 'AR', 'BR', 'CL',
+             'CO', 'US', 'FR', 'IT', 'MX',
+             'UK', 'PE', 'PT']
 
 
 class Extension(ext.Extension):

@@ -20,10 +20,10 @@ It provides access to the following capabilities:
    - explore iVoox podcasts directory
    - user subscribed podcasts (*requieres iVoox account*)
    - iVoox personal suggestions (*requires iVoox account*)
-   - podcast search (*NOT YET IMPLEMENTED*) 
+   - podcast search (*NOT YET IMPLEMENTED*)
 
-DISCLAIMER: This extension has no authorization from www.ivoox.com and is not meant for production use. 
-It aims to help IVoox users to access their account favorite podcasts and subscriptions on those platforms 
+DISCLAIMER: This extension has no authorization from www.ivoox.com and is not meant for production use.
+It aims to help IVoox users to access their account favorite podcasts and subscriptions on those platforms
 where there is no official client, such as Raspberry PI devices.
 
 
