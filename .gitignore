@@ -1,0 +1,11 @@
+*.egg-info
+*.pyc
+*.swp
+.cache/
+.coverage
+.tox/
+MANIFEST
+build/
+dist/
+mopidy_podcast_ivoox/test_client.py
+
