@@ -55,7 +55,8 @@ class Scrapper(object):
     def populate_itemlist(self):
         nitems = max(len(field.value_list)
                      for field in self.fieldlist.itervalues())
-        self.itemlist = [{key: None for key in self.fieldlist.iterkeys()}
+        self.itemlist = [{name: field.default 
+                          for name, field in self.fieldlist.iteritems()}
                          for i in xrange(nitems)]
         for name, field in self.fieldlist.iteritems():
             for i, value in enumerate(field.value_list):
@@ -74,9 +75,3 @@ class Scrapper(object):
         self.populate_from_data(data)
         self.populate_itemlist()
         return self.process_output(self.itemlist)
-
-    def formatted_output(self):
-        for i, itemdict in enumerate(self.itemlist):
-            print '[{0:2d}]'.format(i)
-            for item, value in itemdict.iteritems():
-                print '\t {0}: {1!r}'.format(item, value)

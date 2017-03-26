@@ -63,15 +63,18 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         if uri == self.root_directory.uri:
             if self.user_logged:
                 # User is logged. Show custom menus and subscriptions
-                return [models.Ref.directory(name=item[self.lang],
-                                             uri=item['uri'])
-                           for item in (URI_EXPLORE, URI_HOME)
-                        ] + self.subscriptions
+                menu = [models.Ref.directory(
+                            name=item[self.lang],
+                            uri=item['uri'])
+                        for item in (URI_EXPLORE, URI_HOME)]
+                subs = self._translate_programs(self.ivoox.get_subscriptions(),
+                                                info_field='new_audios')
+                return menu + subs
             else:
                 # User not logged. Root URI shows explore categories
                 uri = URI_EXPLORE['uri']
 
-        subgenres, episodes, programs = (None, None, None)
+        subgenres, episodes, programs = ([], [], [])
 
         if uri == URI_HOME['uri']:
             episodes = self.ivoox.get_home()
@@ -94,28 +97,32 @@ class IVooxLibraryProvider(backend.LibraryProvider):
             + self._translate_episodes(episodes)
 
     def refresh(self, uri=None):
-        results = self.ivoox.get_subscriptions()
-        self.subscriptions = self._translate_programs(results)
+        self.ivoox.clear_cache()
+
+    def lookup(self, uris):
+        pass
 
     def search(self, query=None, uris=None, exact=False):
         pass
 
     @staticmethod
     def _translate_episodes(results):
-        return [models.Ref.track(name=item['name'], uri=item['uri'])
-                    for item in results.itemlist
-                ] if results else []
+        return [models.Ref.track(
+                    name=item['name'],
+                    uri=item['uri'])
+                for item in results]
 
     @staticmethod
-    def _translate_programs(results):
-        return [models.Ref.album(name=item['name'], uri=item['uri'])
-                    for item in results.itemlist
-                ] if results else []
+    def _translate_programs(results, info_field=None):
+        return [models.Ref.album(
+                    name=item['name'] + (' ({})'.format(item[info_field])
+                        if info_field and item.get(info_field) else ''),
+                    uri=item['uri'])
+                for item in results]
 
     @staticmethod
     def _translate_categories(results):
         return [models.Ref.directory(
                     name=item['name'],
-                    uri=URI_EXPLORE['uri'] + ':' + item['code']
-                    ) for item in results.itemlist
-                ] if results else []
+                    uri=URI_EXPLORE['uri'] + ':' + item['code'])
+                for item in results]

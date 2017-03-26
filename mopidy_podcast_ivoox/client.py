@@ -16,7 +16,7 @@ API_URLS = {
     'EXPLORE_EPISODES': 'audios_sa_{}_{}.html',
     'EXPLORE_PROGRAMS': 'podcasts_sc_{}_{}.html',
     'SUBSCRIPTIONS': 'gestionar-suscripciones_je_1.html?order=date',
-    'SEARCH_EPISODES': '{}_sb.html',
+    'SEARCH_EPISODES': '{}_sb_{}.html',
     'SEARCH_PROGRAMS': '{}_sw_1_{}.html',
     'SEARCH_CHANNELS': '{}_sw_2_{}.html',
     'URL_EPISODE': '{1}-audios-mp3_rf_{0}_1.html',
@@ -26,6 +26,19 @@ API_URLS = {
 }
 
 
+def _cache_results(method):    
+    def cached_method(self, *args, **kwargs):        
+        if len(args) != 0 or any(parms!=None for parms in kwargs.itervalues()):
+            return method(self, *args, **kwargs)
+        if not method in self._cache:
+            self._cache[method] = method(self, *args, **kwargs)
+            logger.debug('Caching results of %r: %s', method, self._cache[method])
+        else:
+            logger.debug('Getting results of %r from cache', method)
+        return self._cache[method]
+    return cached_method
+
+
 class IVooxAPI(object):
 
     API_BASE = 'http://www.ivoox.com/'
@@ -33,8 +46,7 @@ class IVooxAPI(object):
     def __init__(self):
         super(IVooxAPI, self).__init__()
         self.session = None
-        self._subscriptions = None
-        self._categories = None
+        self._cache = {}        
 
     def set_language(self, lang='ES'):
         if lang != 'ES':
@@ -71,10 +83,11 @@ class IVooxAPI(object):
             scrapper = self._get_scrapper(type=type, session=self.session)
 
         logger.debug('Using %s to analize %s', scrapper.__class__.__name__, url)
-        scrapper.scrap(url)
+        results = scrapper.scrap(url)
 
-        return scrapper
+        return results
 
+    @_cache_results
     def get_categories(self, parent=None):
         parent = parent or 'f'
         explore_url = API_URLS['EXPLORE_EPISODES'].format(parent, 1)
@@ -87,11 +100,13 @@ class IVooxAPI(object):
                 session=self.session)
             )
 
+    @_cache_results
     def get_subscriptions(self):
         return self.scrap_url(
             url=API_URLS['SUBSCRIPTIONS'],
             type='subscriptions')
 
+    @_cache_results
     def get_home(self):
         return self.scrap_url(url='', type='episodes')
 
@@ -100,8 +115,7 @@ class IVooxAPI(object):
 
         return self.scrap_url(
             url=explore_url.format(category or 'f', page),
-            type=type
-            )
+            type=type)
 
     def search(self, search_item, type='episodes', page=1):
         search_string = '-'.join(search_item.split()).lower()
@@ -109,8 +123,10 @@ class IVooxAPI(object):
 
         return self.scrap_url(
             url=search_url.format(search_string, page),
-            type=type
-            )
+            type=type)
+
+    def clear_cache(self):
+        self._cache = {}
 
     def _get_scrapper(self, type, **options):
         if type == 'episodes':
@@ -125,8 +141,8 @@ class IVooxAPI(object):
             raise KeyError('No scrapper for type %s', type)
 
         return scrapper
-
-
+        
+    
 class IVooxParser(object):
 
     @staticmethod
