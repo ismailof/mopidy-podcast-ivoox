@@ -27,7 +27,7 @@ API_URLS = {
 #    'XML_PROGRAM': '{1}_fg_{0}_filtro_1.xml',  # To allow pagination
     'XML_PROGRAM': '{1}_fg_{0}.xml',
     'LIST_PENDING': 'mis-audios_hn_{}.html',
-    'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html'
+    'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html',
     'LIST_HISTORY': 'audios-que-me-gustan_hc_{}.html'
 }
 
@@ -170,13 +170,23 @@ class IVooxParser(object):
         return API_URLS['URL_PROGRAM'].format(code)
 
     @staticmethod
-    def guess_program_xml(url):
-        if url.endswith('.xml'):
-            return url
+    def guess_feed_xml(info):
+        if info.endswith('.xml'):
+            return info
+        elif info.endswith('.html'):
+            code = IVooxParser.extract_code(info)
+        else:
+            code = info
 
-        code = IVooxParser.extract_code(url) if url.endswith('.html') else url
-        # arreglar después para multiidioma
-        return 'http://www.ivoox.com/' + API_URLS['XML_PROGRAM'].format(code, 'podcast')
+        # subscription urls lack the first part of the code
+        if not code.startswith('f1'):
+            code = 'f1{}'.format(code)
+        
+        # FIXME: multilanguage/multicountry support
+        return uritools.urijoin(
+            'http://www.ivoox.com/',
+             API_URLS['XML_PROGRAM'].format(code, 'podcast')
+             )
 
     @staticmethod
     def extract_duration(strtime):
@@ -258,7 +268,7 @@ class IVooxEpisodes(Scrapper):
         
         self.add_field('guid', basefield='url', parser=IVooxParser.extract_code),
         self.add_field('xml', basefield = 'program_url',
-                        parser=IVooxParser.guess_program_xml),
+                        parser=IVooxParser.guess_feed_xml),
 
 
 class IVooxPrograms(Scrapper):
@@ -270,7 +280,7 @@ class IVooxPrograms(Scrapper):
         self.add_field('audios', './/li[@class="microphone"]/a/text()',
                        parser=int, default=0)
         self.add_field('image', './/img[@class="main"]/@src')
-        self.add_field('xml', basefield='url', parser=IVooxParser.guess_program_xml)
+        self.add_field('xml', basefield='url', parser=IVooxParser.guess_feed_xml)
 
 
 class IVooxShare(Scrapper):
@@ -284,7 +294,7 @@ class IVooxShare(Scrapper):
             return None
 
         return output[0].get('xml') \
-               or IVooxParser.guess_program_xml(output[0].get('code'))
+               or IVooxParser.guess_feed_xml(output[0].get('code'))
 
 
 class IVooxSubscriptions(Scrapper):
