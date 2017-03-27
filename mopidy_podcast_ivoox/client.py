@@ -28,6 +28,7 @@ API_URLS = {
     'XML_PROGRAM': '{1}_fg_{0}.xml',
     'LIST_PENDING': 'mis-audios_hn_{}.html',
     'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html'
+    'LIST_HISTORY': 'audios-que-me-gustan_hc_{}.html'
 }
 
 
@@ -113,7 +114,7 @@ class IVooxAPI(object):
         return self.scrap_url(url='', type='episodes')
 
     def get_episode_list(self, code, page=1):
-        if code in ['pending', 'favorites']:
+        if code in ['pending', 'favorites', 'history']:
             list_url = API_URLS['LIST_{}'.format(code).upper()].format(page)
         else:
             list_url = API_URLS['EXPLORE_LISTS'].format(code, page)
