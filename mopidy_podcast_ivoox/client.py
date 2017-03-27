@@ -24,8 +24,7 @@ API_URLS = {
     'URL_EPISODE': '{1}-audios-mp3_rf_{0}_1.html',
     'URL_PROGRAM': 'podcast_sq_{}_1.html',
     'URL_CHANNEL': 'escuchar_nq_{}_1.html',
-#    'XML_PROGRAM': '{1}_fg_{0}_filtro_1.xml',  # To allow pagination
-    'XML_PROGRAM': '{1}_fg_{0}.xml',
+    'XML_PROGRAM': '{1}_fg_{0}.xml',  # '{1}_fg_{0}_filtro_1.xml' to allow pagination
     'LIST_PENDING': 'mis-audios_hn_{}.html',
     'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html',
     'LIST_HISTORY': 'audios-que-me-gustan_hc_{}.html'
@@ -170,7 +169,7 @@ class IVooxParser(object):
         return API_URLS['URL_PROGRAM'].format(code)
 
     @staticmethod
-    def guess_feed_xml(info):
+    def guess_feed_xml(info, feed_name='podcast'):
         if info.endswith('.xml'):
             return info
         elif info.endswith('.html'):
@@ -185,7 +184,7 @@ class IVooxParser(object):
         # FIXME: multilanguage/multicountry support
         return uritools.urijoin(
             'http://www.ivoox.com/',
-             API_URLS['XML_PROGRAM'].format(code, 'podcast')
+             API_URLS['XML_PROGRAM'].format(code, feed_name)
              )
 
     @staticmethod
@@ -283,23 +282,7 @@ class IVooxPrograms(Scrapper):
         self.add_field('xml', basefield='url', parser=IVooxParser.guess_feed_xml)
 
 
-class IVooxShare(Scrapper):
-
-    def declare_fields(self):
-        self.add_field('code', '//a[@title="Facebook"]/@href', parser=IVooxParser.extract_code)
-        self.add_field('xml', '//li[@class="list-group-item"][h3[@id="rss_suscribe"]]/input/@value', default='')
-
-    def process_output(self, output):
-        if not output:
-            return None
-
-        return output[0].get('xml') \
-               or IVooxParser.guess_feed_xml(output[0].get('code'))
-
-
 class IVooxSubscriptions(Scrapper):
-
-    share = IVooxShare()
 
     def declare_fields(self):
         self.add_field('name', './/a[@class="title"]/text()')
@@ -309,8 +292,7 @@ class IVooxSubscriptions(Scrapper):
         self.add_field('new_audios', './/td[@class="td-sm"]/a[@class="circle-link"]/text()',
                        parser=int, default=0)
         self.add_field('xml', './/a[@class="share"]/@href',
-                       parser=self.share.scrap)
-
+                       parser=IVooxParser.guess_feed_xml)
 
 class IVooxCategories(Scrapper):
 
