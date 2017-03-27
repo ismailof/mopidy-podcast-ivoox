@@ -174,7 +174,7 @@ class IVooxParser(object):
             return url
 
         code = IVooxParser.extract_code(url) if url.endswith('.html') else url
-        # arreglar después para multiidioma
+        # arreglar despuÃ©s para multiidioma
         return 'http://www.ivoox.com/' + API_URLS['XML_PROGRAM'].format(code, 'podcast')
 
     @staticmethod
@@ -220,20 +220,20 @@ class IVooxParser(object):
         if len(parts) > 2:
             return parse_error(fuzzy_date)
 
-        # Format should be "N {día(s)|mes(es)|año(s)}
+        # Format should be "N {dÃ­a(s)|mes(es)|aÃ±o(s)}
         try:
             date_number, date_word = parts
             date_number = int(date_number)
         except:
             return parse_error(fuzzy_date)
 
-        if date_word in ('día', 'días'):
+        if date_word in ('dÃ­a', 'dÃ­as'):
             return days_ago(date_number)
         if date_word in ('semana', 'semanas'):
             return days_ago(date_number * 7)
         elif date_word in ('mes', 'meses'):
             return months_ago(date_number)
-        elif date_word in ('año', 'años'):
+        elif date_word in ('aÃ±o', 'aÃ±os'):
             return years_ago(date_number)
 
         # Got here -> Parsing error
@@ -243,17 +243,19 @@ class IVooxParser(object):
 class IVooxEpisodes(Scrapper):
 
     def declare_fields(self):
-        self.add_field('name', './/meta[@itemprop="name"]/@content')
-        self.add_field('url', './/meta[@itemprop="url"]/@content')
-        self.add_field('guid', basefield='url', parser=IVooxParser.extract_code),
+        self.add_field('name', './/div[@itemprop="episode"]/meta[@itemprop="name"]/@content')
+        self.add_field('url', './/div[@itemprop="episode"]/meta[@itemprop="url"]/@content')
+        self.add_field('description', './/div[@itemprop="episode"]/meta[@itemprop="description"]/@content')        
         self.add_field('image', './/img[@class="main"]/@src')
         self.add_field('duration', './/p[@class="time"]/text()',
                        parser=IVooxParser.extract_duration)
         self.add_field('date', './/li[@class="date"]/@title')
-        self.add_field('genre', './/a[@class="rounded-label"]/@title')
-        self.add_field('description', './/meta[@itemprop="description"]/@content')
+        self.add_field('genre', './/a[@class="rounded-label"]/@title')        
         self.add_field('program', './/div[@class="wrapper"]/a/@title')
+        
         self.add_field('program_url', './/div[@class="wrapper"]/a/@href')
+        
+        self.add_field('guid', basefield='url', parser=IVooxParser.extract_code),
         self.add_field('xml', basefield = 'program_url',
                         parser=IVooxParser.guess_program_xml),
 
