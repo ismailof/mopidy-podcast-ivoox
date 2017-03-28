@@ -106,13 +106,14 @@ class IVooxAPI(object):
 
     @_cache_results
     def get_user_lists(self):
-        return self.scrap_url(
+        lists = self.scrap_url(
             url=API_URLS['LIST_INDEX'],
             scrapper=self._get_scrapper(
                 type='lists',
                 session=self.session)
             )
-            
+        return lists[2:]
+
     @_cache_results
     def get_subscriptions(self):
         return self.scrap_url(
@@ -337,6 +338,4 @@ class IVooxSimpleItems(Scrapper):
         self.add_field('url', container + '//a/@href')
         self.add_field('code', basefield='url',
                        parser=IVooxParser.extract_code)
-                       
-    def process_output(self, output):
-        return output[2:]
+
