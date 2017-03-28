@@ -96,7 +96,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
                 genre = None
 
             subgenres = self.ivoox.get_categories(parent=genre) \
-                if not genre or not genre.startswith('f4') else None
+                if not genre or not genre.startswith('f4') else []
             episodes = self.ivoox.explore(category=genre, type='episodes')
             programs = self.ivoox.explore(category=genre, type='programs')
 
