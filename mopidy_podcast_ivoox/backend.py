@@ -14,9 +14,11 @@ URI_SCHEME = 'podcast+ivoox'
 URI_EXPLORE = {'uri': URI_SCHEME + ':explore', 'ES': 'Explorar', 'EN': 'Explore'}
 URI_HOME = {'uri': URI_SCHEME + ':home', 'ES': 'Recomendado', 'EN': 'Recommended'}
 URI_LIST = {'uri': URI_SCHEME + ':list', 'ES': 'Listas', 'EN': 'Lists'}
-URI_FAVORITES = {'uri': URI_LIST['uri'] + ':favorites', 'ES': 'Favoritos', 'EN': 'Starred'}
-URI_PENDING = {'uri': URI_LIST['uri'] + ':pending', 'ES': 'Escuchar mas tarde', 'EN': 'Listen later'}
-URI_HISTORY = {'uri': URI_LIST['uri'] + ':history', 'ES': 'Historial', 'EN': 'History'}
+URI_LIST_ITEMS = [
+    {'uri': URI_LIST['uri'] + ':favorites', 'ES': 'Favoritos', 'EN': 'Starred'},
+    {'uri': URI_LIST['uri'] + ':pending', 'ES': 'Escuchar mas tarde', 'EN': 'Listen later'},
+    {'uri': URI_LIST['uri'] + ':history', 'ES': 'Historial', 'EN': 'History'}
+]
 
 
 class IVooxBackend(pykka.ThreadingActor, backend.Backend):
@@ -81,12 +83,11 @@ class IVooxLibraryProvider(backend.LibraryProvider):
                 _, _, code = uri.split(':', 3)
             except ValueError:
                 # Lists menu
-                menu = self._translate_menu(URI_FAVORITES, URI_PENDING, URI_HISTORY)
-                lists = self._translate_lists([{'code': '202814',
-                                              'name': 'Nueva cosa'}])
+                menu = self._translate_menu(*URI_LIST_ITEMS)
+                lists = self._translate_lists(self.ivoox.get_user_lists())
                 return menu + lists
 
-            episodes = self.ivoox.get_episode_list(code)
+            episodes = self.ivoox.explore_list(code)
 
         elif uri.startswith(URI_EXPLORE['uri']):
             try:
