@@ -20,14 +20,13 @@ It provides access to the following capabilities:
    - explore iVoox podcasts directory
    - podcast search (*NOT YET IMPLEMENTED*)
 
-Additionally, for users looged into an iVoox account:
+Additionally, for users with an iVoox account:
    - user subscribed podcasts
-   - iVoox personal suggestions
-   - iVoox personal lists
-   - favorites, pending and history lists
+   - user personal lists
+   - iVoox lists: favorites, pending, suggestions and history
 
 DISCLAIMER: This extension has no authorization from www.ivoox.com and is not meant for production use.
-It aims to help IVoox users to access their account favorite podcasts and subscriptions on those platforms
+It aims to help iVoox users to access their account favorite podcasts and subscriptions on those platforms
 where there is no official client, such as Raspberry PI devices.
 
 
