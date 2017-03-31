@@ -28,7 +28,8 @@ class Scrapper(object):
         self._session = session or requests.session()            
         self._fieldlist = collections.OrderedDict()
         self._itemlist = []
-        self.item_selector = None        
+        self._nitems = 0
+        self.item_selector = '.'  # dot indicates root xpath
         self.declare_fields()
 
     def declare_fields(self):
@@ -45,18 +46,31 @@ class Scrapper(object):
         self._fieldlist.clear()
 
     def clear_items(self):
-        self._itemlist.clear()
+        self._itemlist = []
+
+    def scrap(self, url):
+        self.clear_items()
+        data = self.get_data_from_url(url)
+        self.populate_from_data(data)
+        self.populate_itemlist()
+        return self._itemlist
         
     def populate_from_data(self, data):
+
         for field in self._fieldlist.itervalues():
-            if field.xpath:            
-                input_list = data.xpath(field.xpath)
+            
+            print vars(field)
+        
+            if field.xpath:
+                input_list = [data.xpath(self.item_selector 
+                                        + field.xpath)]
             
             elif field.basefield:
                 input_list = [self._fieldlist[name].value_list
-                               for name in field.basefield]                
+                               for name in field.basefield]
 
-            field.parse_input(zip(input_list))
+            print input_list
+            field.parse_input(zip(*input_list))
                 
     def populate_itemlist(self):
         nitems = max(len(field.value_list)
@@ -72,9 +86,3 @@ class Scrapper(object):
 
     def get_data_from_url(self, url):
         return html.fromstring(self._session.get(url).text)
-
-    def scrap(self, url):
-        data = self.get_data_from_url(url)
-        self.populate_from_data(data)
-        self.populate_itemlist()
-        return self._itemlist

@@ -114,7 +114,7 @@ class IVooxAPI(object):
             )
         return lists[2:]
 
-    @_cache_results
+    #@_cache_results
     def get_subscriptions(self):
         return self.scrap_url(
             url=API_URLS['SUBSCRIPTIONS'],
@@ -267,18 +267,18 @@ class IVooxParser(object):
 class IVooxEpisodes(Scrapper):
 
     def declare_fields(self):
-        container = './/div[@itemprop="episode"]'
+        self.item_selector = './/div[@itemprop="episode"]'
         
-        self.add_field('name', container + '/meta[@itemprop="name"]/@content')
-        self.add_field('url', container + '/meta[@itemprop="url"]/@content')
-        self.add_field('description', container + '/meta[@itemprop="description"]/@content')        
-        self.add_field('image', container + '//img[@class="main"]/@src')
-        self.add_field('duration', container + '//p[@class="time"]/text()',
+        self.add_field('name', '/meta[@itemprop="name"]/@content')
+        self.add_field('url', '/meta[@itemprop="url"]/@content')
+        self.add_field('description', '/meta[@itemprop="description"]/@content')        
+        self.add_field('image', '//img[@class="main"]/@src')
+        self.add_field('duration', '//p[@class="time"]/text()',
                        parser=IVooxParser.extract_duration)
-        self.add_field('date', container + '//li[@class="date"]/@title')
-        self.add_field('genre', container + '//a[@class="rounded-label"]/@title')        
-        self.add_field('program', container + '//div[@class="wrapper"]/a/@title')        
-        self.add_field('program_url', container + '//div[@class="wrapper"]/a/@href')
+        self.add_field('date', '//li[@class="date"]/@title')
+        self.add_field('genre', '//a[@class="rounded-label"]/@title')        
+        self.add_field('program', '//div[@class="wrapper"]/a/@title')        
+        self.add_field('program_url', '//div[@class="wrapper"]/a/@href')
         
         self.add_field('guid', basefield='url', parser=IVooxParser.extract_code),
         self.add_field('xml', basefield = 'program_url',
@@ -288,29 +288,29 @@ class IVooxEpisodes(Scrapper):
 class IVooxPrograms(Scrapper):
 
     def declare_fields(self):
-        container = './/div[@itemtype="http://schema.org/RadioSeries"]'
+        self.item_selector = './/div[@itemtype="http://schema.org/RadioSeries"]'
         
-        self.add_field('name', container + '//meta[@itemprop="name"]/@content')
-        self.add_field('url', container + '//meta[@itemprop="url"]/@content')
-        self.add_field('description', container + '//meta[@itemprop="description"]/@content')
-        self.add_field('audios', container + '//li[@class="microphone"]/a/text()',
+        self.add_field('name', '/meta[@itemprop="name"]/@content')
+        self.add_field('url', '/meta[@itemprop="url"]/@content')
+        self.add_field('description', '/meta[@itemprop="description"]/@content')
+        self.add_field('audios', '//li[@class="microphone"]/a/text()',
                        parser=int, default=0)
-        self.add_field('image', container + '//img[@class="main"]/@src')
+        self.add_field('image', '//img[@class="main"]/@src')
         self.add_field('xml', basefield='url', parser=IVooxParser.guess_feed_xml)
 
 
 class IVooxSubscriptions(Scrapper):
 
     def declare_fields(self):
-        container = './/tr'
+        self.item_selector = './/tr'
     
-        self.add_field('name', './/a[@class="title"]/text()')
-        self.add_field('image', './/img[@class="photo hidden-xs"]/@src')
-        self.add_field('date', './/span[@class="date"]/text()',
+        self.add_field('name', '//a[@class="title"]/text()')
+        self.add_field('image', '//img[@class="photo hidden-xs"]/@src')
+        self.add_field('date', '//span[@class="date"]/text()',
                        parser=IVooxParser.date_from_fuzzy)
-        self.add_field('new_audios', './/td[@class="td-sm"]/a[@class="circle-link"]/text()',
+        self.add_field('new_audios', '//td[@class="td-sm"]/a[@class="circle-link"]/text()',
                        parser=int, default=0)
-        self.add_field('xml', './/a[@class="share"]/@href',
+        self.add_field('xml', '//a[@class="share"]/@href',
                        parser=IVooxParser.guess_feed_xml)
 
 
@@ -321,11 +321,11 @@ class IVooxCategories(Scrapper):
         super(IVooxCategories, self).__init__(**kwargs)
 
     def declare_fields(self):
-        container = './/div[@class="pills-container"]' if self.main \
+        self.item_selector = './/div[@class="pills-container"]' if self.main \
             else './/ul[@class="nav nav-pills"]'
 
-        self.add_field('name', container + '//li/a/@title')
-        self.add_field('url', container + '//li/a/@href')
+        self.add_field('name', '//li/a/@title')
+        self.add_field('url', '//li/a/@href')
         self.add_field('code', basefield='url',
                        parser=IVooxParser.extract_code)
 
@@ -333,9 +333,9 @@ class IVooxCategories(Scrapper):
 class IVooxSimpleItems(Scrapper):
 
     def declare_fields(self):
-        container = './/div[@class="flip-container"]//div[@class="content"]'
-        self.add_field('name', container + '//a/@title')
-        self.add_field('url', container + '//a/@href')
+        self.item_selector = './/div[@class="flip-container"]//div[@class="content"]'
+        self.add_field('name', '//a/@title')
+        self.add_field('url', '//a/@href')
         self.add_field('code', basefield='url',
                        parser=IVooxParser.extract_code)
 
