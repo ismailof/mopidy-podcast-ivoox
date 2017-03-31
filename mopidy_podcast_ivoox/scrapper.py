@@ -16,10 +16,6 @@ class Field(object):
             else [basefield]
         self.default = default
 
-    def extract_from_data(self, data):
-        input_list = data.xpath(self.xpath)
-        return self.parse_input(zip(input_list))
-
     def parse_input(self, input_list):
         self.value_list = [self.parser(*input_args)
                            for input_args in input_list]
@@ -29,49 +25,56 @@ class Field(object):
 class Scrapper(object):
 
     def __init__(self, session=None):
-        self.fieldlist = collections.OrderedDict()
-        self.session = session or requests.session()
+        self._session = session or requests.session()            
+        self._fieldlist = collections.OrderedDict()
+        self._itemlist = []
+        self.item_selector = None        
         self.declare_fields()
 
     def declare_fields(self):
         pass
 
+    @property
+    def itemlist(self):
+        return self._itemlist
+
     def add_field(self, name, *args, **kwargs):
-        self.fieldlist[name] = Field(*args, **kwargs)
+        self._fieldlist[name] = Field(*args, **kwargs)
 
     def clear_fields(self):
-        self.fieldlist.clear()
+        self._fieldlist.clear()
 
+    def clear_items(self):
+        self._itemlist.clear()
+        
     def populate_from_data(self, data):
-        for field in self.fieldlist.itervalues():
-            if field.xpath:
-                field.extract_from_data(data)
+        for field in self._fieldlist.itervalues():
+            if field.xpath:            
+                input_list = data.xpath(field.xpath)
+            
             elif field.basefield:
-                base_values = [self.fieldlist[name].value_list
-                               for name in field.basefield]
+                input_list = [self._fieldlist[name].value_list
+                               for name in field.basefield]                
 
-                field.parse_input(zip(*base_values))
-
+            field.parse_input(zip(input_list))
+                
     def populate_itemlist(self):
         nitems = max(len(field.value_list)
-                     for field in self.fieldlist.itervalues())
-        self.itemlist = [{name: field.default
-                          for name, field in self.fieldlist.iteritems()}
+                     for field in self._fieldlist.itervalues())
+        self._itemlist = [{name: field.default
+                          for name, field in self._fieldlist.iteritems()}
                          for i in xrange(nitems)]
-        for name, field in self.fieldlist.iteritems():
+        for name, field in self._fieldlist.iteritems():
             for i, value in enumerate(field.value_list):
-                self.itemlist[i].update({name: value})
+                self._itemlist[i].update({name: value})
 
-        return self.itemlist
+        return self._itemlist
 
     def get_data_from_url(self, url):
-        return html.fromstring(self.session.get(url).text)
-
-    def process_output(self, output):
-        return output
+        return html.fromstring(self._session.get(url).text)
 
     def scrap(self, url):
         data = self.get_data_from_url(url)
         self.populate_from_data(data)
         self.populate_itemlist()
-        return self.process_output(self.itemlist)
+        return self._itemlist
