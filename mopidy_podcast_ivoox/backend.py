@@ -6,6 +6,8 @@ import uritools
 from mopidy import backend, models
 
 from .client import IVooxClient
+from .api import IVooxAPI
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -36,19 +38,19 @@ class IVooxLibraryProvider(backend.LibraryProvider):
     def __init__(self, config, backend):
         super(IVooxLibraryProvider, self).__init__(backend)
 
-        ivoox_config = config['podcast-ivoox']
+        self.config = config['podcast-ivoox']
 
-        self.ivoox = IVooxClient(lang=ivoox_config['lang'],
-                                 country=ivoox_config['country'])
+        self.ivoox = IVooxClient(lang=self.config['lang'],
+                                 country=self.config['country'])
 
         self.user_logged = self.ivoox.login(
-            user=ivoox_config['username'],
-            password=ivoox_config['password']
+            user=self.config['username'],
+            password=self.config['password']
         )
-        logger.info('User authorization in ivoox.com : %s',
+        logger.info('Logging in to %s : %s',
+                    self.ivoox.baseurl,
                     'OK' if self.user_logged else 'NOT LOGGED')
 
-        self.lang = ivoox_config['lang']
         self.refresh()
 
     @property
@@ -118,38 +120,43 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         if not xml:
             return None
         # Feeds use main URL, not localized
-        baseurl = self.IVooxAPI.get_baseurl()
+        baseurl = IVooxAPI.get_baseurl()
         program = uritools.urijoin(baseurl, xml)
         episode = '#' + uritools.urijoin(baseurl, ep_guid) if ep_guid else ''
         return 'podcast+{}{}'.format(program, episode)
 
-    def _translate_menu(self, *menuitems):
+    def _translate_menu(self, *items):
         return [models.Ref.directory(
-                    name=item[self.lang],
+                    name=item[self.config['lang']],
                     uri=item['uri'])
-                for item in menuitems]
+                for item in items
+        ]
 
-    def _translate_episodes(self, results):
+    def _translate_episodes(self, items):
         return [models.Ref.track(
                     name=item['name'],
                     uri=self._make_podcast_uri(item['xml'], item['guid'])
-                ) for item in results]
+                ) for item in items[0:self.config['max_episodes']]
+        ]
 
-    def _translate_programs(self, results, info_field=None):
+    def _translate_programs(self, items, info_field=None):
         return [models.Ref.album(
                     name=item['name'] + (' ({})'.format(item[info_field])
                         if info_field and item.get(info_field) else ''),
                     uri=self._make_podcast_uri(item['xml'])
-                ) for item in results]
+                ) for item in items[0:self.config['max_programs']]
+        ]
 
-    def _translate_categories(self, results):
+    def _translate_categories(self, items):
         return [models.Ref.directory(
                     name=item['name'],
                     uri=URI_EXPLORE['uri'] + ':' + item['code']
-                ) for item in results]
+                ) for item in items
+        ]
 
-    def _translate_lists(self, results):
+    def _translate_lists(self, items):
         return [models.Ref.playlist(
                     name=item['name'],
                     uri=URI_LIST['uri'] + ':' + item['code']
-                ) for item in results]
+                ) for item in items
+        ]
