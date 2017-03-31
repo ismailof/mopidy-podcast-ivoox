@@ -4,40 +4,33 @@ from lxml import html
 
 
 class Field(object):
-
     def __init__(self,
                  xpath=None, basefield=None,
                  parser=None, default=None):
-
         self.xpath = xpath
         self.value_list = []
         self.parser = parser or (lambda x: x)
-        self.basefield = basefield if isinstance(basefield, list) \
-            else [basefield]
+        self.basefield = basefield
         self.default = default
 
-    def parse_input(self, input_list):
-        self.value_list = [self.parser(*input_args)
-                           for input_args in input_list]
-        return self.value_list
+    def extract(self, data):
+        try:
+            raw_value = data.xpath('.' + self.xpath)[0]
+            return self.parser(raw_value)
+        except:
+            return self.default
 
 
 class Scrapper(object):
 
     def __init__(self, session=None):
-        self._session = session or requests.session()            
+        self._session = session or requests.session()
         self._fieldlist = collections.OrderedDict()
-        self._itemlist = []
-        self._nitems = 0
         self.item_selector = '.'  # dot indicates root xpath
         self.declare_fields()
 
     def declare_fields(self):
         pass
-
-    @property
-    def itemlist(self):
-        return self._itemlist
 
     def add_field(self, name, *args, **kwargs):
         self._fieldlist[name] = Field(*args, **kwargs)
@@ -45,44 +38,24 @@ class Scrapper(object):
     def clear_fields(self):
         self._fieldlist.clear()
 
-    def clear_items(self):
-        self._itemlist = []
-
     def scrap(self, url):
-        self.clear_items()
-        data = self.get_data_from_url(url)
-        self.populate_from_data(data)
-        self.populate_itemlist()
-        return self._itemlist
-        
-    def populate_from_data(self, data):
+        data = self._get_data_from_url(url)
+        items = data.xpath(self.item_selector)
+        itemlist = [self._populate_item(itemdata)
+                    for itemdata in items]
+        return itemlist
 
-        for field in self._fieldlist.itervalues():
-            
-            print vars(field)
-        
-            if field.xpath:
-                input_list = [data.xpath(self.item_selector 
-                                        + field.xpath)]
-            
-            elif field.basefield:
-                input_list = [self._fieldlist[name].value_list
-                               for name in field.basefield]
+    def _populate_item(self, itemdata):
+        item = {name: field.extract(itemdata)
+                for name, field in self._fieldlist.iteritems()
+                if field.xpath}
 
-            print input_list
-            field.parse_input(zip(*input_list))
-                
-    def populate_itemlist(self):
-        nitems = max(len(field.value_list)
-                     for field in self._fieldlist.itervalues())
-        self._itemlist = [{name: field.default
-                          for name, field in self._fieldlist.iteritems()}
-                         for i in xrange(nitems)]
-        for name, field in self._fieldlist.iteritems():
-            for i, value in enumerate(field.value_list):
-                self._itemlist[i].update({name: value})
+        item_base = {name: field.parser(item[field.basefield])
+                     for name, field in self._fieldlist.iteritems()
+                     if field.basefield}
 
-        return self._itemlist
+        item.update(item_base)
+        return item
 
-    def get_data_from_url(self, url):
+    def _get_data_from_url(self, url):
         return html.fromstring(self._session.get(url).text)

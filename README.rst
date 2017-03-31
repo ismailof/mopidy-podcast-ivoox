@@ -24,7 +24,7 @@ Additionally, for users looged into an iVoox account:
    - user subscribed podcasts
    - iVoox personal suggestions
    - iVoox personal lists
-   - favorites, pending and history lists   
+   - favorites, pending and history lists
 
 DISCLAIMER: This extension has no authorization from www.ivoox.com and is not meant for production use.
 It aims to help IVoox users to access their account favorite podcasts and subscriptions on those platforms

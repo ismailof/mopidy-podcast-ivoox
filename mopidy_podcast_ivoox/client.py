@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: iso-8859-15 -*-
+# -*- coding: utf8 -*-
 from __future__ import unicode_literals, print_function
 
 import logging
@@ -176,7 +176,7 @@ class IVooxParser(object):
 
     @staticmethod
     def extract_code(url):
-        return url.split('_')[-2]
+        return url.split('_')[-2] if url else None
 
     @staticmethod
     def guess_program_url(code):
@@ -194,7 +194,7 @@ class IVooxParser(object):
         # subscription urls lack the first part of the code
         if not code.startswith('f1'):
             code = 'f1{}'.format(code)
-        
+
         # FIXME: multilanguage/multicountry support
         return uritools.urijoin(
             'http://www.ivoox.com/',
@@ -224,6 +224,10 @@ class IVooxParser(object):
         def parse_error(input_string):
             return input_string
 
+
+        if not fuzzy_date:
+            return None
+
         fuzzy_date = fuzzy_date.lower().strip()
 
         parts = fuzzy_date.split()
@@ -251,13 +255,13 @@ class IVooxParser(object):
         except:
             return parse_error(fuzzy_date)
 
-        if date_word in ('día', 'días'):
+        if date_word in ('día', 'días', 'day', 'days'):
             return days_ago(date_number)
-        if date_word in ('semana', 'semanas'):
+        if date_word in ('semana', 'semanas', 'week', 'weeks'):
             return days_ago(date_number * 7)
-        elif date_word in ('mes', 'meses'):
+        elif date_word in ('mes', 'meses', 'month', 'months'):
             return months_ago(date_number)
-        elif date_word in ('año', 'años'):
+        elif date_word in ('año', 'años', 'year', 'years'):
             return years_ago(date_number)
 
         # Got here -> Parsing error
@@ -268,18 +272,18 @@ class IVooxEpisodes(Scrapper):
 
     def declare_fields(self):
         self.item_selector = './/div[@itemprop="episode"]'
-        
+
         self.add_field('name', '/meta[@itemprop="name"]/@content')
         self.add_field('url', '/meta[@itemprop="url"]/@content')
-        self.add_field('description', '/meta[@itemprop="description"]/@content')        
+        self.add_field('description', '/meta[@itemprop="description"]/@content')
         self.add_field('image', '//img[@class="main"]/@src')
         self.add_field('duration', '//p[@class="time"]/text()',
                        parser=IVooxParser.extract_duration)
         self.add_field('date', '//li[@class="date"]/@title')
-        self.add_field('genre', '//a[@class="rounded-label"]/@title')        
-        self.add_field('program', '//div[@class="wrapper"]/a/@title')        
+        self.add_field('genre', '//a[@class="rounded-label"]/@title')
+        self.add_field('program', '//div[@class="wrapper"]/a/@title')
         self.add_field('program_url', '//div[@class="wrapper"]/a/@href')
-        
+
         self.add_field('guid', basefield='url', parser=IVooxParser.extract_code),
         self.add_field('xml', basefield = 'program_url',
                         parser=IVooxParser.guess_feed_xml),
@@ -289,7 +293,7 @@ class IVooxPrograms(Scrapper):
 
     def declare_fields(self):
         self.item_selector = './/div[@itemtype="http://schema.org/RadioSeries"]'
-        
+
         self.add_field('name', '/meta[@itemprop="name"]/@content')
         self.add_field('url', '/meta[@itemprop="url"]/@content')
         self.add_field('description', '/meta[@itemprop="description"]/@content')
@@ -303,7 +307,7 @@ class IVooxSubscriptions(Scrapper):
 
     def declare_fields(self):
         self.item_selector = './/tr'
-    
+
         self.add_field('name', '//a[@class="title"]/text()')
         self.add_field('image', '//img[@class="photo hidden-xs"]/@src')
         self.add_field('date', '//span[@class="date"]/text()',
@@ -317,15 +321,15 @@ class IVooxSubscriptions(Scrapper):
 class IVooxCategories(Scrapper):
 
     def __init__(self, main=True, **kwargs):
-        self.main = main
+        self.is_main = main
         super(IVooxCategories, self).__init__(**kwargs)
 
     def declare_fields(self):
-        self.item_selector = './/div[@class="pills-container"]' if self.main \
-            else './/ul[@class="nav nav-pills"]'
+        self.item_selector = './/div[@class="pills-container"]//li' if self.is_main \
+            else './/ul[@class="nav nav-pills"]//li'
 
-        self.add_field('name', '//li/a/@title')
-        self.add_field('url', '//li/a/@href')
+        self.add_field('name', '/a/@title')
+        self.add_field('url', '/a/@href')
         self.add_field('code', basefield='url',
                        parser=IVooxParser.extract_code)
 
