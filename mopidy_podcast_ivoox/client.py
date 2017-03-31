@@ -27,6 +27,7 @@ API_URLS = {
     'URL_CHANNEL': 'escuchar_nq_{}_1.html',
     'XML_PROGRAM': '{1}_fg_{0}.xml',  # '{1}_fg_{0}_filtro_1.xml' to allow pagination
     'LIST_INDEX': 'mis-listas_hk.html',
+    'LIST_HOME': '',
     'LIST_PENDING': 'mis-audios_hn_{}.html',
     'LIST_FAVORITES': 'audios-que-me-gustan_hc_recomendados_{}.html',
     'LIST_HISTORY': 'audios-que-me-gustan_hc_{}.html'
@@ -104,7 +105,7 @@ class IVooxAPI(object):
                 session=self.session)
             )
 
-    @_cache_results
+    #@_cache_results
     def get_user_lists(self):
         lists = self.scrap_url(
             url=API_URLS['LIST_INDEX'],
@@ -120,12 +121,8 @@ class IVooxAPI(object):
             url=API_URLS['SUBSCRIPTIONS'],
             type='subscriptions')
 
-    @_cache_results
-    def get_home(self):
-        return self.scrap_url(url='', type='episodes')
-
     def explore_list(self, code, page=1):
-        if code in ['pending', 'favorites', 'history']:
+        if code in ['pending', 'favorites', 'history', 'home']:
             list_url = API_URLS['LIST_{}'.format(code).upper()].format(page)
         else:
             list_url = API_URLS['EXPLORE_LISTS'].format(code, page)

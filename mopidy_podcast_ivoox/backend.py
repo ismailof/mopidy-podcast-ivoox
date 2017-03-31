@@ -12,11 +12,12 @@ logger.setLevel(logging.DEBUG)
 
 URI_SCHEME = 'podcast+ivoox'
 URI_EXPLORE = {'uri': URI_SCHEME + ':explore', 'ES': 'Explorar', 'EN': 'Explore'}
-URI_HOME = {'uri': URI_SCHEME + ':home', 'ES': 'Recomendado', 'EN': 'Recommended'}
+URI_SUBS = {'uri': URI_SCHEME + ':subs', 'ES': 'Subscripciones', 'EN': 'Subscriptions'}
 URI_LIST = {'uri': URI_SCHEME + ':list', 'ES': 'Listas', 'EN': 'Lists'}
 URI_LIST_ITEMS = [
     {'uri': URI_LIST['uri'] + ':favorites', 'ES': 'Favoritos', 'EN': 'Starred'},
     {'uri': URI_LIST['uri'] + ':pending', 'ES': 'Escuchar mas tarde', 'EN': 'Listen later'},
+    {'uri': URI_LIST['uri'] + ':home', 'ES': 'Recomendado', 'EN': 'Recommended'},
     {'uri': URI_LIST['uri'] + ':history', 'ES': 'Historial', 'EN': 'History'}
 ]
 
@@ -65,7 +66,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         if uri == self.root_directory.uri:
             if self.user_logged:
                 # User is logged. Show custom menus and subscriptions
-                menu = self._translate_menu(URI_EXPLORE, URI_HOME, URI_LIST)
+                menu = self._translate_menu(URI_EXPLORE, URI_LIST)
                 subs = self._translate_programs(self.ivoox.get_subscriptions(),
                                                 info_field='new_audios')
                 return menu + subs
@@ -75,10 +76,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
 
         subgenres, episodes, programs = ([], [], [])
 
-        if uri == URI_HOME['uri']:
-            episodes = self.ivoox.get_home()
-
-        elif uri.startswith(URI_LIST['uri']):
+        if uri.startswith(URI_LIST['uri']):
             try:
                 _, _, code = uri.split(':', 3)
             except ValueError:
