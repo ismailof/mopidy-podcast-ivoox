@@ -4,14 +4,11 @@ import logging
 import os
 
 from mopidy import config, ext
+from .client import IVooxAPI
 
 __version__ = '0.1.0'
 
 logger = logging.getLogger(__name__)
-
-COUNTRIES = ['ES', 'DE', 'AR', 'BR', 'CL',
-             'CO', 'US', 'FR', 'IT', 'MX',
-             'UK', 'PE', 'PT']
 
 
 class Extension(ext.Extension):
@@ -30,8 +27,8 @@ class Extension(ext.Extension):
         schema.update(
             username=config.String(optional=True),
             password=config.Secret(optional=True),
-            lang=config.String(choices=['ES', 'EN']),
-            country=config.String(choices=COUNTRIES)
+            lang=config.String(choices=IVooxAPI.LANGUAGES),
+            country=config.String(choices=IVooxAPI.COUNTRIES)
             )
         return schema
 

@@ -5,7 +5,7 @@ import pykka
 import uritools
 from mopidy import backend, models
 
-from .client import IVooxAPI
+from .client import IVooxClient
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -36,13 +36,11 @@ class IVooxLibraryProvider(backend.LibraryProvider):
     def __init__(self, config, backend):
         super(IVooxLibraryProvider, self).__init__(backend)
 
-        self.ivoox = IVooxAPI()
-
         ivoox_config = config['podcast-ivoox']
 
-        self.lang = ivoox_config['lang']
-        self.ivoox.set_language(self.lang)
-
+        self.ivoox = IVooxClient(lang=ivoox_config['lang'],
+                                 country=ivoox_config['country'])
+        
         self.user_logged = self.ivoox.login(
             user=ivoox_config['username'],
             password=ivoox_config['password']
@@ -50,6 +48,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         logger.info('User authorization in ivoox.com : %s',
                     'OK' if self.user_logged else 'NOT LOGGED')
 
+        self.lang = ivoox_config['lang']
         self.refresh()
 
     @property
