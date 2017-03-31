@@ -11,7 +11,6 @@ from scrapper import Scrapper
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def _cache(method):
@@ -26,7 +25,7 @@ def _cache(method):
         return self._cache[method]
     return cached_method
 
-        
+
 class IVooxClient(object):
 
     def __init__(self, lang='ES', country='ES'):
@@ -35,7 +34,7 @@ class IVooxClient(object):
         self._cache = {}
         self.lang = lang
         self.country = country
-        
+
     @property
     def baseurl(self):
         return IVooxAPI.get_baseurl(lang=self.lang,
@@ -111,10 +110,10 @@ class IVooxClient(object):
     def explore(self, category=None, type='episodes', page=1):
         explore_url = IVooxAPI.format_url(
             'EXPLORE_{}'.format(type.upper()),
-            category or 'f', 
+            category or 'f',
             page)
         return self.scrap_url(
-            url=explore_url, 
+            url=explore_url,
             type=type)
 
     def search(self, search_item, type='episodes', page=1):
@@ -126,7 +125,7 @@ class IVooxClient(object):
         return self.scrap_url(url=search_url, type=type)
 
     def clear_cache(self):
-        self._cache = {}    
+        self._cache = {}
 
     def _absolute_url(self, relurl):
         return uritools.urijoin(self.baseurl, relurl)

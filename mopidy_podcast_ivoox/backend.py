@@ -40,7 +40,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
 
         self.ivoox = IVooxClient(lang=ivoox_config['lang'],
                                  country=ivoox_config['country'])
-        
+
         self.user_logged = self.ivoox.login(
             user=ivoox_config['username'],
             password=ivoox_config['password']
@@ -117,7 +117,8 @@ class IVooxLibraryProvider(backend.LibraryProvider):
     def _make_podcast_uri(self, xml, ep_guid=None):
         if not xml:
             return None
-        baseurl = self.ivoox.baseurl
+        # Feeds use main URL, not localized
+        baseurl = self.IVooxAPI.get_baseurl()
         program = uritools.urijoin(baseurl, xml)
         episode = '#' + uritools.urijoin(baseurl, ep_guid) if ep_guid else ''
         return 'podcast+{}{}'.format(program, episode)

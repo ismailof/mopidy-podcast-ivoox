@@ -19,6 +19,7 @@ Mopidy extension for accessing IVoox podcasting platform.
 It provides access to the following capabilities:
    - explore iVoox podcasts directory
    - podcast search (*NOT YET IMPLEMENTED*)
+   - localization: languages (ES/EN) and countries supported by iVoox
 
 Additionally, for users with an iVoox account:
    - user subscribed podcasts
@@ -74,6 +75,6 @@ Credits
 Changelog
 =========
 
-v0.1.0 (UNRELEASED)
-----------------------------------------
-- Initial release.
+v0.2.0 (UNRELEASED) : Localization support
+v0.1.0 (UNRELEASED) : Initial release
+

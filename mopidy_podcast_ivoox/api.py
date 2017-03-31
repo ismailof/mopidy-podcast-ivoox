@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function
 
 import datetime as dt
-import uritools
 
 from scrapper import Scrapper
 
@@ -10,9 +9,8 @@ from scrapper import Scrapper
 class IVooxAPI(object):
 
     LANGUAGES = ['ES', 'EN']
-    COUNTRIES = ['ES', 'DE', 'AR', 'BR', 'CL',
-                 'CO', 'US', 'FR', 'IT', 'MX',
-                 'UK', 'PE', 'PT']
+    COUNTRIES = ['ES', 'DE', 'AR', 'BR', 'CL', 'CO',
+                 'US', 'FR', 'IT', 'MX', 'PE', 'PT']
 
     API_URLS = {
         'LOGIN': 'ajx-login_zl.html',
@@ -37,10 +35,18 @@ class IVooxAPI(object):
 
     @staticmethod
     def get_baseurl(lang='ES', country='ES'):
-        return 'http://www.ivoox.com/'
-    
+        assert lang in IVooxAPI.LANGUAGES, \
+            "Language not supported: '{}'".format(lang)
+        assert country in IVooxAPI.COUNTRIES, \
+            "Country not supported: '{}'".format(country)
+
+        prefix = 'www' if country == 'ES' else country.lower()
+        suffix = '' if lang == 'ES' and country == 'ES' else lang.lower() + '/'
+
+        return 'http://{}.ivoox.com/{}'.format(prefix, suffix)
+
     @classmethod
-    def format_url(cls, item, *args):        
+    def format_url(cls, item, *args):
         return cls.API_URLS[item].format(*args)
 
     @staticmethod
@@ -59,7 +65,7 @@ class IVooxAPI(object):
             raise KeyError('No scrapper for type %s', type)
 
         return scrapper
-    
+
     @staticmethod
     def parse_url_code(url):
         return url.split('_')[-2] if url else None
@@ -77,11 +83,7 @@ class IVooxAPI(object):
         if not code.startswith('f1'):
             code = 'f1{}'.format(code)
 
-        # FIXME: multilanguage/multicountry support
-        return uritools.urijoin(
-            'http://www.ivoox.com/',
-            IVooxAPI.format_url('XML_PROGRAM', code, feed_name)
-            )
+        return IVooxAPI.format_url('XML_PROGRAM', code, feed_name)
 
     @staticmethod
     def parse_duration(strtime):
