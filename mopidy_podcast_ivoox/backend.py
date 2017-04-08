@@ -6,7 +6,7 @@ import uritools
 from mopidy import backend, models
 
 from .client import IVooxClient
-from .api import IVooxAPI
+import ivooxapi
 
 
 logger = logging.getLogger(__name__)
@@ -120,7 +120,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         if not xml:
             return None
         # Feeds use main URL, not localized
-        baseurl = IVooxAPI.get_baseurl()
+        baseurl = ivooxapi.get_baseurl()
         program = uritools.urijoin(baseurl, xml)
         episode = '#' + uritools.urijoin(baseurl, ep_guid) if ep_guid else ''
         return 'podcast+{}{}'.format(program, episode)

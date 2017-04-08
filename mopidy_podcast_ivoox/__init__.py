@@ -4,7 +4,7 @@ import logging
 import os
 
 from mopidy import config, ext
-from .client import IVooxAPI
+import ivooxapi
 
 __version__ = '0.2.0'
 
@@ -27,8 +27,8 @@ class Extension(ext.Extension):
         schema.update(
             username=config.String(optional=True),
             password=config.Secret(optional=True),
-            lang=config.String(choices=IVooxAPI.LANGUAGES),
-            country=config.String(choices=IVooxAPI.COUNTRIES),
+            lang=config.String(choices=ivooxapi.LANGUAGES),
+            country=config.String(choices=ivooxapi.COUNTRIES),
             max_episodes=config.Integer(minimum=1, maximum=100),
             max_programs=config.Integer(minimum=1, maximum=100)
             )

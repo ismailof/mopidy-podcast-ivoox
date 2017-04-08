@@ -6,7 +6,7 @@ import logging
 import requests
 import uritools
 
-from api import IVooxAPI
+import ivooxapi
 from scrapper import Scrapper
 
 
@@ -37,14 +37,14 @@ class IVooxClient(object):
 
     @property
     def baseurl(self):
-        return IVooxAPI.get_baseurl(lang=self.lang,
+        return ivooxapi.get_baseurl(lang=self.lang,
                                     country=self.country)
 
     def login(self, user, password):
         if not (user and password):
             return False
 
-        login_url = self._absolute_url(IVooxAPI.format_url('LOGIN'))
+        login_url = self._absolute_url(ivooxapi.format_url('LOGIN'))
         self.session = requests.session()
 
         try:
@@ -63,7 +63,7 @@ class IVooxClient(object):
 
     def scrap_url(self, url, type=None, scrapper=None):
         if not scrapper:
-            scrapper = IVooxAPI.get_scrapper(type=type, session=self.session)
+            scrapper = ivooxapi.get_scrapper(type=type, session=self.session)
         logger.debug('Using %s to analize %s', scrapper.__class__.__name__, url)
         results = scrapper.scrap(self._absolute_url(url))
         return results
@@ -71,11 +71,11 @@ class IVooxClient(object):
     @_cache
     def get_categories(self, parent=None):
         parent = parent or 'f'
-        explore_url = IVooxAPI.format_url('EXPLORE_EPISODES', parent, 1)
+        explore_url = ivooxapi.format_url('EXPLORE_EPISODES', parent, 1)
 
         return self.scrap_url(
             url=explore_url,
-            scrapper=IVooxAPI.get_scrapper(
+            scrapper=ivooxapi.get_scrapper(
                 type='categories',
                 main=(parent == 'f'),
                 session=self.session)
@@ -84,8 +84,8 @@ class IVooxClient(object):
     #@_cache
     def get_user_lists(self):
         lists = self.scrap_url(
-            url=IVooxAPI.format_url('LIST_INDEX'),
-            scrapper=IVooxAPI.get_scrapper(
+            url=ivooxapi.format_url('LIST_INDEX'),
+            scrapper=ivooxapi.get_scrapper(
                 type='lists',
                 session=self.session)
             )
@@ -94,21 +94,21 @@ class IVooxClient(object):
     #@_cache
     def get_subscriptions(self):
         return self.scrap_url(
-            url=IVooxAPI.format_url('SUBSCRIPTIONS'),
+            url=ivooxapi.format_url('SUBSCRIPTIONS'),
             type='subscriptions')
 
     def explore_list(self, code, page=1):
         if code in ['pending', 'favorites', 'history', 'home']:
-            list_url = IVooxAPI.format_url('LIST_{}'.format(code).upper(), page)
+            list_url = ivooxapi.format_url('LIST_{}'.format(code).upper(), page)
         else:
-            list_url = IVooxAPI.format_url('EXPLORE_LISTS', code, page)
+            list_url = ivooxapi.format_url('EXPLORE_LISTS', code, page)
 
         return self.scrap_url(
             url=list_url,
             type='episodes')
 
     def explore(self, category=None, type='episodes', page=1):
-        explore_url = IVooxAPI.format_url(
+        explore_url = ivooxapi.format_url(
             'EXPLORE_{}'.format(type.upper()),
             category or 'f',
             page)
@@ -118,7 +118,7 @@ class IVooxClient(object):
 
     def search(self, search_item, type='episodes', page=1):
         search_string = '-'.join(search_item.split()).lower()
-        search_url = IVooxAPI.format_url(
+        search_url = ivooxapi.format_url(
             'SEARCH_{}'.format(type.upper()),
             search_string,
             page)
