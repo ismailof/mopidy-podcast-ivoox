@@ -46,15 +46,18 @@ class Scrapper(object):
         return itemlist
 
     def _populate_item(self, itemdata):
+        # Direct fields (xpath)
         item = {name: field.extract(itemdata)
                 for name, field in self._fieldlist.iteritems()
                 if field.xpath}
 
-        item_base = {name: field.parser(item[field.basefield])
-                     for name, field in self._fieldlist.iteritems()
-                     if field.basefield}
+        # Relative fields (basefield)
+        for name, field in self._fieldlist.iteritems():
+            if field.basefield:
+                item.update({
+                    name: field.parser(item[field.basefield])
+                })
 
-        item.update(item_base)
         return item
 
     def _get_data_from_url(self, url):

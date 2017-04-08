@@ -23,6 +23,7 @@ API_URLS = {
     'URL_EPISODE': '{1}-audios-mp3_rf_{0}_1.html',
     'URL_PROGRAM': 'podcast_sq_{}_1.html',
     'URL_CHANNEL': 'escuchar_nq_{}_1.html',
+    'URL_AUDIO': 'listen_mn_{0}_1.mp3',
     'XML_PROGRAM': '{1}_fg_{0}.xml',  # '{1}_fg_{0}_filtro_1.xml' to allow pagination
     'LIST_INDEX': 'mis-listas_hk.html',
     'LIST_HOME': '',
@@ -157,10 +158,11 @@ class IVooxEpisodes(Scrapper):
         self.add_field('program', '//div[@class="wrapper"]/a/@title')
         self.add_field('program_url', '//div[@class="wrapper"]/a/@href')
 
-        self.add_field('guid', basefield='url', parser=parse_url_code),
+        self.add_field('guid', basefield='url', parser=parse_url_code)
         self.add_field('xml', basefield = 'program_url',
-                        parser=parse_feed_xml),
-
+                        parser=parse_feed_xml)
+        self.add_field('mp3', basefield='guid',
+                       parser=API_URLS['URL_AUDIO'].format)
 
 class IVooxPrograms(Scrapper):
 
