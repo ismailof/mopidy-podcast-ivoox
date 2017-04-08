@@ -40,7 +40,7 @@ def get_baseurl(lang='ES', country='ES'):
         "Country not supported: '{}'".format(country)
 
     prefix = 'www' if country == 'ES' else country.lower()
-    suffix = '' if lang == 'ES' and country == 'ES' else lang.lower() + '/'
+    suffix = '' if (lang, country) == ('ES', 'ES') else lang.lower() + '/'
 
     return 'http://{}.ivoox.com/{}'.format(prefix, suffix)
 
@@ -217,3 +217,10 @@ class IVooxSimpleItems(Scrapper):
         self.add_field('url', '//a/@href')
         self.add_field('code', basefield='url',
                        parser=parse_url_code)
+
+
+class CheckLogin(Scrapper):
+
+    def declare_fields(self):
+        self.item_selector = './/div[@id="main-navbar"]'
+        self.add_field('user', '//a[@class="hidden-xs user dropdown-toggle text-ellipsis"]/span/text()')

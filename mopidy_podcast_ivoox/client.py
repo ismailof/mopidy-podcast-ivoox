@@ -46,6 +46,7 @@ class IVooxClient(object):
 
         login_url = self._absolute_url(ivooxapi.format_url('LOGIN'))
         self.session = requests.session()
+        self.clear_cache()
 
         try:
             self.session.get(login_url)
@@ -54,12 +55,18 @@ class IVooxClient(object):
                                     'at-pw': password,
                                     'redir': self.baseurl})
 
-            # TODO: Check login is OK
-            return True
+            return self.user_logged()
 
         except Exception as ex:
             logger.error('Login error on %s: %s', self.baseurl, ex)
             return False
+
+    @_cache
+    def user_logged(self):
+        userinfo = self.scrap_url(
+            url=ivooxapi.format_url('EXPLORE_EPISODES', 'f', 1),
+            scrapper=ivooxapi.CheckLogin(session=self.session))
+        return userinfo[0]['user'] is not None
 
     def scrap_url(self, url, type=None, scrapper=None):
         if not scrapper:
@@ -81,7 +88,6 @@ class IVooxClient(object):
                 session=self.session)
             )
 
-    #@_cache
     def get_user_lists(self):
         lists = self.scrap_url(
             url=ivooxapi.format_url('LIST_INDEX'),
@@ -91,7 +97,6 @@ class IVooxClient(object):
             )
         return lists[2:]
 
-    #@_cache
     def get_subscriptions(self):
         return self.scrap_url(
             url=ivooxapi.format_url('SUBSCRIPTIONS'),

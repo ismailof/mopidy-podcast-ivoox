@@ -43,13 +43,13 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         self.ivoox = IVooxClient(lang=self.config['lang'],
                                  country=self.config['country'])
 
-        self.user_logged = self.ivoox.login(
+        self.ivoox.login(
             user=self.config['username'],
             password=self.config['password']
         )
         logger.info('Logging in to %s : %s',
                     self.ivoox.baseurl,
-                    'OK' if self.user_logged else 'NOT LOGGED')
+                    'OK' if self.ivoox.user_logged() else 'NOT LOGGED')
 
         self.refresh()
 
@@ -65,7 +65,7 @@ class IVooxLibraryProvider(backend.LibraryProvider):
 
         # Browsing Root Directory
         if uri == self.root_directory.uri:
-            if self.user_logged:
+            if self.ivoox.user_logged():
                 # User is logged. Show custom menus and subscriptions
                 menu = self._translate_menu(URI_EXPLORE, URI_LIST)
                 subs = self._translate_programs(self.ivoox.get_subscriptions(),
