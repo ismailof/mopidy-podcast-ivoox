@@ -111,10 +111,10 @@ class IVooxLibraryProvider(backend.LibraryProvider):
         self.ivoox.clear_cache()
 
     def lookup(self, uris):
-        pass
+        return []
 
     def search(self, query=None, uris=None, exact=False):
-        pass
+        return None
 
     def _make_podcast_uri(self, xml, ep_guid=None):
         if not xml:
